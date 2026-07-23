@@ -8,10 +8,10 @@ Lance avec : streamlit run dashboard_saas.py
 import streamlit as st
 import requests
 import json
+import os
 
 # === CONFIG ===
-API_URL = "https://moneyleak-api.onrender.com"
-# Pour le dev local : API_URL = "http://localhost:8000"
+API_URL = os.getenv("API_URL", "https://moneyleak-api.onrender.com")
 
 st.set_page_config(
     page_title="Money Leak Calculator",

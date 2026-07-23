@@ -15,6 +15,16 @@ services:
       - key: PYTHON_VERSION
         value: "3.12"
 
+  - type: web
+    name: moneyleak-dashboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements_dashboard.txt
+    startCommand: streamlit run dashboard_saas.py --server.port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+
 databases:
   - name: moneyleak-db
     plan: free

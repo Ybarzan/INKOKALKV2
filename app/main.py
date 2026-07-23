@@ -20,6 +20,8 @@ from .routes.prediction import router as prediction_router
 from .routes.widget import router as widget_router
 from .routes.alertes import router as alertes_router
 from .routes.brand import router as brand_router
+from .routes.apikeys import router as apikeys_router
+from .routes.webhooks import router as webhooks_router
 from .odoo_connector import creer_route_odoo
 
 # === CREER L'APP ===
@@ -49,6 +51,8 @@ app.include_router(prediction_router)
 app.include_router(widget_router)
 app.include_router(alertes_router)
 app.include_router(brand_router)
+app.include_router(apikeys_router)
+app.include_router(webhooks_router)
 app.include_router(creer_route_odoo())
 
 
