@@ -2,7 +2,7 @@
 Connexion a la base de donnees.
 ===============================
 Supporte PostgreSQL (prod) et SQLite (dev local).
-Render PostgreSQL necessite SSL.
+Render PostgreSQL necessite sslmode=require.
 """
 
 from sqlalchemy import create_engine, event
@@ -26,18 +26,27 @@ if not DATABASE_URL:
 
 _is_sqlite = "sqlite" in DATABASE_URL
 
-# Render PostgreSQL necessite sslmode=require
-connect_args = {}
-if not _is_sqlite:
-    if "sslmode" not in DATABASE_URL:
+# Config engine
+if _is_sqlite:
+    engine = create_engine(
+        DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        pool_pre_ping=True,
+    )
+else:
+    # PostgreSQL : ajouter sslmode=require si pas deja present
+    if "?" in DATABASE_URL:
+        if "sslmode" not in DATABASE_URL:
+            DATABASE_URL += "&sslmode=require"
+    else:
         DATABASE_URL += "?sslmode=require"
-    connect_args = {"sslmode": "require"}
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args=connect_args if not _is_sqlite else {"check_same_thread": False},
-    pool_pre_ping=True,
-)
+    engine = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_size=2,
+        max_overflow=3,
+    )
 
 # Activer les FK en SQLite
 if _is_sqlite:
