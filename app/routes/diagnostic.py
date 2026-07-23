@@ -59,6 +59,7 @@ class DomaineResult(BaseModel):
 
 
 class DiagnosticResponse(BaseModel):
+    diagnostic_id: Optional[int] = None
     score_global: float
     fuite_totale_eur: float
     fuite_pct_ca: float
@@ -122,29 +123,36 @@ def creer_diagnostic(
     # Generer les recommandations
     recommandations = _generer_recommandations(result)
 
-    # Sauvegarder en base
-    diagnostic = Diagnostic(
-        user_id=user.id,
-        titre=req.nom_entreprise or "Diagnostic",
-        statut="termine",
-        valeurs=req.valeurs,
-        score_global=result.score_global,
-        fuite_totale_eur=result.fuite_totale_eur,
-        fuite_pct_ca=round(result.fuite_pct_ca * 100, 4),
-        nb_indicateurs=result.nb_indicateurs,
-        nb_critiques=result.nb_critiques,
-        resultats_detailles={
-            "secteur": req.secteur,
-            "domaines": [d.model_dump() for d in domaines],
-            "indicateurs": [i.model_dump() for i in indicateurs],
-            "recommandations": recommandations,
-        },
-    )
-    db.add(diagnostic)
-    db.commit()
-    db.refresh(diagnostic)
+    # Sauvegarder en base (optionnel — ne plante pas si la DB marche pas)
+    diagnostic_id = None
+    try:
+        diagnostic = Diagnostic(
+            user_id=user.id,
+            titre=req.nom_entreprise or "Diagnostic",
+            statut="termine",
+            valeurs=req.valeurs,
+            score_global=result.score_global,
+            fuite_totale_eur=result.fuite_totale_eur,
+            fuite_pct_ca=round(result.fuite_pct_ca * 100, 4),
+            nb_indicateurs=result.nb_indicateurs,
+            nb_critiques=result.nb_critiques,
+            resultats_detailles={
+                "secteur": req.secteur,
+                "domaines": [d.model_dump() for d in domaines],
+                "indicateurs": [i.model_dump() for i in indicateurs],
+                "recommandations": recommandations,
+            },
+        )
+        db.add(diagnostic)
+        db.commit()
+        db.refresh(diagnostic)
+        diagnostic_id = diagnostic.id
+    except Exception as e:
+        db.rollback()
+        print(f"[WARN] Sauvegarde DB echouee: {e}")
 
     return DiagnosticResponse(
+        diagnostic_id=diagnostic_id,
         score_global=result.score_global,
         fuite_totale_eur=result.fuite_totale_eur,
         fuite_pct_ca=round(result.fuite_pct_ca * 100, 2),
