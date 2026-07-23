@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Leak Calculator — Supply Chain Intelligence</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: #0a0a0a; color: #e0e0e0; }
+
+        /* === HERO === */
+        .hero {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; padding: 2rem;
+            background: radial-gradient(ellipse at 50% 0%, #1a1a2e 0%, #0a0a0a 70%);
+        }
+        .hero h1 {
+            font-size: 3.5rem; font-weight: 800;
+            background: linear-gradient(135deg, #00d4aa, #0099ff, #7c3aed);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .hero .tagline { font-size: 1.3rem; color: #888; margin-bottom: 2.5rem; }
+        .hero .cta-group { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+        .btn {
+            padding: 0.9rem 2rem; border-radius: 8px; font-size: 1rem;
+            font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.3s;
+        }
+        .btn-primary { background: linear-gradient(135deg, #00d4aa, #0099ff); color: #fff; border: none; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,212,170,0.3); }
+        .btn-secondary { background: transparent; color: #00d4aa; border: 2px solid #00d4aa; }
+        .btn-secondary:hover { background: rgba(0,212,170,0.1); }
+
+        /* === STATS === */
+        .stats { display: flex; gap: 3rem; margin-top: 4rem; flex-wrap: wrap; justify-content: center; }
+        .stat { text-align: center; }
+        .stat .number { font-size: 2.5rem; font-weight: 800; color: #00d4aa; }
+        .stat .label { font-size: 0.9rem; color: #666; margin-top: 0.3rem; }
+
+        /* === SECTIONS === */
+        section { padding: 5rem 2rem; max-width: 1100px; margin: 0 auto; }
+        section h2 { font-size: 2.2rem; font-weight: 700; text-align: center; margin-bottom: 3rem; }
+        section h2 span { color: #00d4aa; }
+
+        /* === FEATURES === */
+        .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .feature {
+            background: #111; border: 1px solid #222; border-radius: 12px;
+            padding: 2rem; transition: border-color 0.3s;
+        }
+        .feature:hover { border-color: #00d4aa; }
+        .feature .icon { font-size: 2rem; margin-bottom: 1rem; }
+        .feature h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .feature p { color: #888; font-size: 0.95rem; line-height: 1.6; }
+
+        /* === PRICING === */
+        .pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+        .plan {
+            background: #111; border: 1px solid #222; border-radius: 12px;
+            padding: 2rem; text-align: center; position: relative;
+        }
+        .plan.popular { border-color: #00d4aa; }
+        .plan.popular::before {
+            content: "Populaire"; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #00d4aa, #0099ff); color: #fff;
+            padding: 0.3rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+        }
+        .plan h3 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+        .plan .price { font-size: 2.2rem; font-weight: 800; color: #00d4aa; margin: 1rem 0; }
+        .plan .price span { font-size: 0.9rem; color: #666; font-weight: 400; }
+        .plan ul { list-style: none; text-align: left; margin: 1.5rem 0; }
+        .plan ul li { padding: 0.4rem 0; color: #aaa; font-size: 0.9rem; }
+        .plan ul li::before { content: "✓ "; color: #00d4aa; font-weight: 700; }
+
+        /* === HOW IT WORKS === */
+        .steps { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; counter-reset: step; }
+        .step {
+            flex: 1; min-width: 220px; max-width: 280px; text-align: center;
+            position: relative; padding-top: 3rem;
+        }
+        .step::before {
+            counter-increment: step; content: counter(step);
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(135deg, #00d4aa, #0099ff);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 1.2rem; color: #fff;
+        }
+        .step h3 { margin-bottom: 0.5rem; }
+        .step p { color: #888; font-size: 0.9rem; }
+
+        /* === CTA FINAL === */
+        .cta-final {
+            text-align: center; padding: 5rem 2rem;
+            background: radial-gradient(ellipse at 50% 100%, #1a1a2e 0%, #0a0a0a 70%);
+        }
+        .cta-final h2 { font-size: 2.5rem; margin-bottom: 1rem; }
+        .cta-final p { color: #888; margin-bottom: 2rem; font-size: 1.1rem; }
+
+        /* === FOOTER === */
+        footer {
+            text-align: center; padding: 2rem; border-top: 1px solid #1a1a1a;
+            color: #444; font-size: 0.85rem;
+        }
+        footer a { color: #00d4aa; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>Money Leak Calculator</h1>
+    <p class="tagline">Supply Chain Intelligence — La plateforme qui transforme vos donnees logistiques en decisions rentables</p>
+    <div class="cta-group">
+        <a href="#pricing" class="btn btn-primary">Voir les offres</a>
+        <a href="/docs" class="btn btn-secondary">API Demo</a>
+    </div>
+    <div class="stats">
+        <div class="stat"><div class="number">43</div><div class="label">Indicateurs</div></div>
+        <div class="stat"><div class="number">8</div><div class="label">Secteurs</div></div>
+        <div class="stat"><div class="number">5</div><div class="label">Domaines</div></div>
+        <div class="stat"><div class="number">98%</div><div class="label">Precision</div></div>
+    </div>
+</div>
+
+<!-- COMMENT CA MARCHE -->
+<section>
+    <h2>Comment ca <span>marche</span> ?</h2>
+    <div class="steps">
+        <div class="step">
+            <h3>Saisissez vos donnees</h3>
+            <p>Importez vos factures CSV ou saisissez vos 43 indicateurs Supply Chain en quelques clics.</p>
+        </div>
+        <div class="step">
+            <h3>Analyse automatique</h3>
+            <p>Notre moteur de scoring Six Sigma compare vos performances aux benchmarks sectoriels.</p>
+        </div>
+        <div class="step">
+            <h3>Recevez votre score</h3>
+            <p>Score global, fuites quantifiees en EUR, recommandations prioritaires et plan d'action.</p>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section>
+    <h2>Pourquoi <span>Money Leak</span> ?</h2>
+    <div class="features">
+        <div class="feature">
+            <div class="icon">📊</div>
+            <h3>43 indicateurs sectoriels</h3>
+            <p>Transport, stocks, entrepot, processus, achats — couverture complete de la Supply Chain avec benchmarks actualises.</p>
+        </div>
+        <div class="feature">
+            <div class="icon">🏭</div>
+            <h3>8 secteurs d'activite</h3>
+            <p>Industrie, E-commerce, Distribution, Agroalimentaire, Pharma, Luxe, Automobile — des seuils adaptes a chaque contexte.</p>
+        </div>
+        <div class="feature">
+            <div class="icon">⚡</div>
+            <h3>Score en 30 secondes</h3>
+            <p>Pas besoin de consultant pour le diagnostic initial. Saisissez vos donnees, le score apparait en direct.</p>
+        </div>
+        <div class="feature">
+            <div class="icon">💰</div>
+            <h3>Fuites en EUR</h3>
+            <p>Pas juste un score abstrait. On quantifie les pertes reelles en euros pour chaque indicateur defaillant.</p>
+        </div>
+        <div class="feature">
+            <div class="icon">🔗</div>
+            <h3>API ouverte (ERP/WMS)</h3>
+            <p>Integreable dans votre ERP, WMS ou outil metier via notre REST API. Widget Excel disponible.</p>
+        </div>
+        <div class="feature">
+            <div class="icon">📈</div>
+            <h3>What-If Simulator</h3>
+            <p>Testez des scenarios d'amelioration avant de les implementer. Visualisez l'impact sur votre score.</p>
+        </div>
+    </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+    <h2>Les <span>offres</span></h2>
+    <div class="pricing">
+        <div class="plan">
+            <h3>Starter</h3>
+            <div class="price">299€<span>/mois</span></div>
+            <ul>
+                <li>3 utilisateurs</li>
+                <li>20 indicateurs</li>
+                <li>3 secteurs</li>
+                <li>Import CSV</li>
+                <li>Rapport PDF basique</li>
+                <li>Support email</li>
+            </ul>
+            <a href="#" class="btn btn-secondary" style="width:100%">Commencer</a>
+        </div>
+        <div class="plan popular">
+            <h3>Professional</h3>
+            <div class="price">799€<span>/mois</span></div>
+            <ul>
+                <li>10 utilisateurs</li>
+                <li>43 indicateurs</li>
+                <li>8 secteurs</li>
+                <li>Import CSV + API</li>
+                <li>Dashboard temps reel</li>
+                <li>What-If (10 scenarios)</li>
+                <li>Rapport PDF + PPT</li>
+                <li>Support prioritaire</li>
+            </ul>
+            <a href="#" class="btn btn-primary" style="width:100%">Demarrer</a>
+        </div>
+        <div class="plan">
+            <h3>Enterprise</h3>
+            <div class="price">Sur mesure</div>
+            <ul>
+                <li>Utilisateurs illimites</li>
+                <li>43 + indicateurs custom</li>
+                <li>Secteurs sur mesure</li>
+                <li>Connecteur ERP (SAP, Oracle)</li>
+                <li>Widget Excel VBA</li>
+                <li>What-If illimite</li>
+                <li>Dedicated CSM</li>
+                <li>SLA 99.99%</li>
+            </ul>
+            <a href="#" class="btn btn-secondary" style="width:100%">Contacter</a>
+        </div>
+    </div>
+</section>
+
+<!-- CTA FINAL -->
+<div class="cta-final">
+    <h2>Pret a detecter vos fuites ?</h2>
+    <p>14 jours d'essai gratuit. Pas de CB requise.</p>
+    <div class="cta-group">
+        <a href="#" class="btn btn-primary">Essai gratuit 14 jours</a>
+        <a href="/docs" class="btn btn-secondary">Voir la doc API</a>
+    </div>
+</div>
+
+<footer>
+    <p>&copy; 2026 Money Leak Calculator — <a href="https://sc-t-consulting.com">SC&T Consulting</a></p>
+</footer>
+
+</body>
+</html>

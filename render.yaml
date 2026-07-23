@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: moneyleak-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: moneyleak-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: "3.12"
+
+databases:
+  - name: moneyleak-db
+    plan: free
+    databaseName: moneyleak_db
+    user: moneyleak
