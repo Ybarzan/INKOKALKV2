@@ -9,7 +9,7 @@ Le serveur donne un "jeton" (token) qui prouve qui il est.
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -23,10 +23,6 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
 
-# === MOT DE PASSE ===
-# "passlib" gere le hashage du mot de passe (on ne stocke jamais le vrai mdp)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 # === BEARER TOKEN ===
 security = HTTPBearer()
 
@@ -35,12 +31,15 @@ security = HTTPBearer()
 
 def hash_password(password: str) -> str:
     """Hash un mot de passe (pour le stocker en base)."""
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifie si un mot de passe correspond au hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        hashed_password.encode("utf-8"),
+    )
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -84,8 +83,12 @@ def get_current_user(
             return user
     """
     payload = decode_token(credentials.credentials)
-    user_id: int = payload.get("sub")
-    if user_id is None:
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
+        raise HTTPException(status_code=401, detail="Token invalide")
+    try:
+        user_id = int(user_id_str)
+    except (ValueError, TypeError):
         raise HTTPException(status_code=401, detail="Token invalide")
 
     user = db.query(User).filter(User.id == user_id).first()

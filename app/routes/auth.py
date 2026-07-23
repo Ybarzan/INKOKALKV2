@@ -73,7 +73,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
     db.refresh(user)
 
     # Generer le token
-    token = create_access_token({"sub": user.id, "email": user.email})
+    token = create_access_token({"sub": str(user.id), "email": user.email})
 
     return TokenResponse(
         access_token=token,
@@ -100,7 +100,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
             detail="Compte desactive"
         )
 
-    token = create_access_token({"sub": user.id, "email": user.email})
+    token = create_access_token({"sub": str(user.id), "email": user.email})
 
     return TokenResponse(
         access_token=token,

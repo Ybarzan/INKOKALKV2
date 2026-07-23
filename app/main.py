@@ -15,6 +15,7 @@ from .database import init_db
 from .routes.diagnostic import router as diagnostic_router
 from .routes.import_csv import router as import_router
 from .routes.auth import router as auth_router
+from .routes.rapport import router as rapport_router
 
 # === CREER L'APP ===
 app = FastAPI(
@@ -38,6 +39,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(diagnostic_router)
 app.include_router(import_router)
+app.include_router(rapport_router)
 
 
 # === ROUTES PUBLIQUES ===

@@ -122,6 +122,28 @@ def creer_diagnostic(
     # Generer les recommandations
     recommandations = _generer_recommandations(result)
 
+    # Sauvegarder en base
+    diagnostic = Diagnostic(
+        user_id=user.id,
+        titre=req.nom_entreprise or "Diagnostic",
+        statut="termine",
+        valeurs=req.valeurs,
+        score_global=result.score_global,
+        fuite_totale_eur=result.fuite_totale_eur,
+        fuite_pct_ca=round(result.fuite_pct_ca * 100, 4),
+        nb_indicateurs=result.nb_indicateurs,
+        nb_critiques=result.nb_critiques,
+        resultats_detailles={
+            "secteur": req.secteur,
+            "domaines": [d.model_dump() for d in domaines],
+            "indicateurs": [i.model_dump() for i in indicateurs],
+            "recommandations": recommandations,
+        },
+    )
+    db.add(diagnostic)
+    db.commit()
+    db.refresh(diagnostic)
+
     return DiagnosticResponse(
         score_global=result.score_global,
         fuite_totale_eur=result.fuite_totale_eur,
@@ -157,6 +179,61 @@ def lister_indicateurs():
             }
             for i in engine.indicateurs
         ]
+    }
+
+
+@router.get("/mes-diagnostics")
+def mes_diagnostics(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Liste les diagnostics de l'utilisateur connecte."""
+    diags = db.query(Diagnostic).filter(
+        Diagnostic.user_id == user.id
+    ).order_by(Diagnostic.created_at.desc()).limit(50).all()
+
+    return {
+        "diagnostics": [
+            {
+                "id": d.id,
+                "titre": d.titre,
+                "statut": d.statut,
+                "score_global": d.score_global,
+                "fuite_totale_eur": d.fuite_totale_eur,
+                "created_at": d.created_at.isoformat() if d.created_at else None,
+            }
+            for d in diags
+        ]
+    }
+
+
+@router.get("/{diagnostic_id}")
+def get_diagnostic(
+    diagnostic_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Recupere un diagnostic par son ID."""
+    diag = db.query(Diagnostic).filter(
+        Diagnostic.id == diagnostic_id,
+        Diagnostic.user_id == user.id,
+    ).first()
+
+    if not diag:
+        raise HTTPException(404, "Diagnostic non trouve")
+
+    return {
+        "id": diag.id,
+        "titre": diag.titre,
+        "statut": diag.statut,
+        "score_global": diag.score_global,
+        "fuite_totale_eur": diag.fuite_totale_eur,
+        "fuite_pct_ca": diag.fuite_pct_ca,
+        "nb_indicateurs": diag.nb_indicateurs,
+        "nb_critiques": diag.nb_critiques,
+        "valeurs": diag.valeurs,
+        "resultats_detailles": diag.resultats_detailles,
+        "created_at": diag.created_at.isoformat() if diag.created_at else None,
     }
 
 

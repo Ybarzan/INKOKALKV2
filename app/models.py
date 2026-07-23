@@ -55,7 +55,7 @@ class Diagnostic(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    client_id = Column(Integer, ForeignKey("clients.id"), nullable=False)
+    client_id = Column(Integer, ForeignKey("clients.id"), nullable=True)
     titre = Column(String(255), default="Diagnostic")
     statut = Column(String(50), default="brouillon")  # brouillon, termine, archive
 
