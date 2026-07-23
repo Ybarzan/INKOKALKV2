@@ -2,6 +2,7 @@
 Connexion a la base de donnees.
 ===============================
 Supporte PostgreSQL (prod) et SQLite (dev local).
+Render PostgreSQL necessite SSL.
 """
 
 from sqlalchemy import create_engine, event
@@ -25,9 +26,16 @@ if not DATABASE_URL:
 
 _is_sqlite = "sqlite" in DATABASE_URL
 
+# Render PostgreSQL necessite sslmode=require
+connect_args = {}
+if not _is_sqlite:
+    if "sslmode" not in DATABASE_URL:
+        DATABASE_URL += "?sslmode=require"
+    connect_args = {"sslmode": "require"}
+
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False} if _is_sqlite else {},
+    connect_args=connect_args if not _is_sqlite else {"check_same_thread": False},
     pool_pre_ping=True,
 )
 
