@@ -1,15 +1,17 @@
 """
 Route /api/diagnostic — Le coeur du SaaS.
-==========================================
+=========================================
 Recoit les valeurs d'un client, renvoie le score + recommandations.
+Supporte FR/EN via header Accept-Language.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from ..scoring import ScoringEngine, ConfigMission, Domaine, format_eur, format_pct
+from ..translations import t
 
 from ..database import get_db
 from ..auth import get_current_user
@@ -73,11 +75,19 @@ class DiagnosticResponse(BaseModel):
 
 # === ROUTES ===
 
+def _get_lang(accept_language: Optional[str] = Header(None)) -> str:
+    """Extrait la langue depuis le header Accept-Language."""
+    if accept_language and accept_language.startswith("en"):
+        return "en"
+    return "fr"
+
+
 @router.post("", response_model=DiagnosticResponse)
 def creer_diagnostic(
     req: ValeursRequest,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
+    lang: str = Depends(_get_lang),
 ):
     """
     Lance un diagnostic complet.
@@ -121,7 +131,7 @@ def creer_diagnostic(
             ))
 
     # Generer les recommandations
-    recommandations = _generer_recommandations(result)
+    recommandations = _generer_recommandations(result, lang)
 
     # Sauvegarder en base (optionnel — ne plante pas si la DB marche pas)
     diagnostic_id = None
@@ -247,20 +257,22 @@ def get_diagnostic(
 
 # === RECOMMANDATIONS ===
 
-def _generer_recommandations(result) -> list[str]:
+def _generer_recommandations(result, lang: str = "fr") -> list[str]:
     """Genere des recommandations basees sur les scores."""
     recos = []
 
     for domaine, res in result.domaines.items():
+        domaine_label = t(domaine.value, lang)
         if res.score < 4:
             recos.append(
-                f"🔴 URGENT — {domaine.value} : score {res.score}/10. "
-                f"{res.nb_critiques} indicateurs critiques. Audit approfondi recommande."
+                f"🔴 {t('urgent', lang)} — {domaine_label} : score {res.score}/10. "
+                f"{res.nb_critiques} {t('indicateurs_critiques', lang).lower()}. "
+                f"Audit approfondi recommande."
             )
         elif res.score < 7:
             recos.append(
-                f"🟡 {domaine.value} : score {res.score}/10. "
-                f"Des quick wins sont possibles ({res.nb_critiques} points d'attention)."
+                f"🟡 {domaine_label} : score {res.score}/10. "
+                f"{t('amelioration_possible', lang)} ({res.nb_critiques} points d'attention)."
             )
 
     # Recommandations specifiques par indicateur
@@ -270,10 +282,10 @@ def _generer_recommandations(result) -> list[str]:
                 recos.append(
                     f"⚡ {r.indicateur.code} ({r.indicateur.nom}) : "
                     f"{r.valeur_client} vs benchmark {r.benchmark}. "
-                    f"Potentiel d'economie estime."
+                    f"{t('potentiel_economie', lang)}."
                 )
 
     if not recos:
-        recos.append("✅ Excellentes performances ! Pas de fuite majeure detectee.")
+        recos.append(f"✅ {t('excellentes_performances', lang)}")
 
-    return recos[:15]  # Limiter a 15 recommandations
+    return recos[:15]
